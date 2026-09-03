@@ -353,7 +353,7 @@ export default function Home() {
       </section>
 
       <section className="how-section" id="how-it-works"><span className="eyebrow">BUILT FOR REAL STUDY SESSIONS</span><h2>Less organizing. More remembering.</h2><div className="how-grid"><article><b>01</b><h3>Bring your material</h3><p>Drop in a PDF, Word document, text file, or your own notes. Review the extracted text before AI uses it.</p></article><article><b>02</b><h3>Ask and understand</h3><p>Chat with your material for simple explanations, comparisons, and grounded answers.</p></article><article><b>03</b><h3>Practice actively</h3><p>Turn dense material into summaries, flashcards, quizzes, and a focused study plan.</p></article></div></section>
-      <footer><span>LearnCraft</span><p>Made for students who want to understand—not just reread.</p><small>built by me</small></footer>
+      <footer><span>LearnCraft</span><p>Made for students who want to understand—not just reread.</p><small>Made by Nathaniel Ibemesim · 2026</small></footer>
     </main>
   );
 }
