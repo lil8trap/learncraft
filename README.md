@@ -4,7 +4,7 @@ LearnCraft is an AI-powered study assistant that turns class notes and course do
 
 **Live demo:** [learncraft-study.vercel.app](https://learncraft-study.vercel.app)
 
-![LearnCraft workspace and summary](docs/screenshots/workspace-and-summary.jpg)
+![LearnCraft Summary](docs/screenshots/summary.png)
 
 ## How it works
 
@@ -15,11 +15,40 @@ LearnCraft is an AI-powered study assistant that turns class notes and course do
 
 ### Flashcards
 
-![LearnCraft active-recall flashcards](docs/screenshots/flashcards.jpg)
+![LearnCraft Flashcards](docs/screenshots/flashcards.png)
 
 ### Practice quiz
 
-![LearnCraft multiple-choice practice quiz](docs/screenshots/practice-quiz.jpg)
+![LearnCraft Practice Quiz](docs/screenshots/practice-quiz.png)
+
+
+## System Architecture (UML)
+
+The diagram below shows how LearnCraft processes study materials and generates learning resources.
+
+```mermaid
+flowchart TD
+    A["Student"]
+    B["LearnCraft Frontend"]
+    C["Document Upload / Text Input"]
+    D["Content Processing"]
+    E["AI Generation API"]
+    F["Summary"]
+    G["Flashcards"]
+    H["Practice Quiz"]
+    I["Study Plan"]
+    J["Ask LearnCraft"]
+
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+    E --> G
+    E --> H
+    E --> I
+    E --> J
+```
 
 ## Features
 
