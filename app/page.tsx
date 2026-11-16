@@ -307,7 +307,22 @@ export default function Home() {
           </div>
           <div className="controls-row">
             <div><label htmlFor="depth">Study depth</label><select id="depth" value={difficulty} disabled={generationStatus === "loading"} onChange={(event) => { generationRequestId.current += 1; setDifficulty(event.target.value as Difficulty); resetStudyKit(); }}><option>Quick</option><option>Standard</option><option>Deep</option></select></div>
-            <button className="generate-button" onClick={generate} disabled={!notes.trim() || generationStatus === "loading"}><span>{generationStatus === "loading" ? "Creating your kit…" : "Generate with AI"}</span><b>{generationStatus === "loading" ? "✦" : "→"}</b></button>
+                        
+<button
+  className="generate-button"
+  onClick={generate}
+  disabled={!notes.trim() || generationStatus === "loading"}
+>
+  <span>
+    {generationStatus === "loading"
+      ? "Creating your kit…"
+      : !notes.trim()
+        ? "Add notes to get started"
+        : "Generate with AI"}
+  </span>
+  <b>{generationStatus === "loading" ? "✦" : "→"}</b>
+</button>
+
           </div>
           {generationMessage && <div className={`generation-notice ${generationStatus}`} role="status"><span>{generationStatus === "ai" ? "✦" : generationStatus === "loading" ? "◌" : "i"}</span><p>{generationMessage}</p></div>}
           <div className="privacy-note"><span>◉</span><p><strong>Your original file stays in your browser.</strong><br />LearnCraft extracts its text locally. Only that text is sent through the secure AI route when you generate a kit.</p></div>
@@ -315,7 +330,7 @@ export default function Home() {
 
         <section className="results-panel" aria-live="polite">
           <div className="results-heading"><div><span className="eyebrow">02 / STUDY KIT</span><h2>{generationStatus === "loading" ? "Turning notes into understanding…" : generationStatus === "ai" ? "Your AI study kit is ready." : generationStatus === "fallback" ? "Your local study kit is ready." : "Ready when you are."}</h2></div><span className="depth-badge">{difficulty} depth</span></div>
-          {!hasStudyKit ? <div className="result-content"><div className="chat-welcome"><span>✦</span><div><h4>{generationStatus === "loading" ? "Creating your study kit" : "Your workspace is ready"}</h4><p>{generationStatus === "loading" ? "We are turning your current notes into study material." : "Add course material or paste notes on the left, then select Generate with AI to create a study kit based on your source."}</p></div></div></div> : <>
+          {!hasStudyKit ? <div className="result-content"><div className="chat-welcome"><span>✦</span><div><h4>{generationStatus === "loading" ? "Creating your study kit" : "Your study kit starts here"}</h4><p>{generationStatus === "loading" ? "We are turning your current notes into study material." : "Add course material or paste notes on the left, then select Generate with AI to create a study kit based on your source."}</p></div></div></div> : <>
           <div className="tabs" role="tablist" aria-label="Study tools">
             {tabs.map((tab) => <button key={tab.id} className={mode === tab.id ? "selected" : ""} onClick={() => setMode(tab.id)} role="tab" aria-selected={mode === tab.id}>{tab.label}{tab.count ? <span>{tab.count}</span> : null}</button>)}
           </div>
