@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, DragEvent, FormEvent, useMemo, useState } from "react";
+import { ChangeEvent, DragEvent, FormEvent, useMemo, useRef, useState } from "react";
 import { extractDocument, formatFileSize, MAX_STUDY_CHARS } from "@/lib/extract-document";
 
 type Mode = "summary" | "flashcards" | "quiz" | "plan" | "chat";
@@ -12,18 +12,6 @@ type StudyKit = { summary: string[]; keyTerms: string[]; flashcards: Flashcard[]
 type GenerationStatus = "idle" | "loading" | "ai" | "fallback";
 type ImportedFile = { name: string; size: number; pageCount?: number };
 type ChatMessage = { id: string; role: "user" | "assistant"; content: string; mode?: "ai" | "local" };
-
-const SAMPLE_NOTES = `Binary Search Trees (BST)
-A binary search tree stores smaller values in the left subtree and larger values in the right subtree. Search, insertion, and deletion are O(log n) on average, but O(n) when the tree becomes skewed.
-
-Tree traversals
-Inorder traversal visits left, root, right and returns BST values in sorted order. Preorder visits root, left, right. Postorder visits left, right, root. Breadth-first search uses a queue and visits nodes level by level.
-
-AVL Trees
-An AVL tree is a self-balancing BST. Every node has a balance factor of -1, 0, or 1. An LL imbalance needs a right rotation; RR needs a left rotation. LR needs a left rotation followed by a right rotation. RL needs a right rotation followed by a left rotation.
-
-Heaps
-A max heap is a complete binary tree where every parent is at least as large as its children. In a one-indexed array, the left child is 2i, the right child is 2i + 1, and the parent is floor(i/2). Insertion and deletion are O(log n), while finding the maximum is O(1).`;
 
 const STOP_WORDS = new Set([
   "about", "after", "again", "also", "because", "been", "before", "being", "between", "both", "but", "can", "each", "every", "from", "have", "into", "more", "most", "not", "only", "other", "over", "same", "than", "that", "the", "their", "then", "there", "these", "they", "this", "through", "under", "uses", "using", "very", "when", "where", "which", "while", "with", "your",
@@ -115,8 +103,9 @@ function localDocumentAnswer(question: string, text: string) {
 }
 
 export default function Home() {
-  const [notes, setNotes] = useState(SAMPLE_NOTES);
-  const [source, setSource] = useState(SAMPLE_NOTES);
+  const [notes, setNotes] = useState("");
+  const [source, setSource] = useState("");
+  const generationRequestId = useRef(0);
   const [mode, setMode] = useState<Mode>("summary");
   const [difficulty, setDifficulty] = useState<Difficulty>("Standard");
   const [flipped, setFlipped] = useState<number | null>(null);
@@ -133,6 +122,7 @@ export default function Home() {
   const [chatQuestion, setChatQuestion] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
 
+  const hasStudyKit = generationStatus === "ai" || generationStatus === "fallback";
   const words = notes.trim() ? notes.trim().split(/\s+/).length : 0;
   const localSummary = useMemo(() => createSummary(source), [source]);
   const localTerms = useMemo(() => keyTerms(source), [source]);
@@ -156,6 +146,7 @@ export default function Home() {
   async function generate() {
     if (!notes.trim()) return;
     const cleanNotes = notes.trim();
+    const requestId = ++generationRequestId.current;
     setSource(cleanNotes); setAnswers({}); setShowResults(false); setFlipped(null); setAiKit(null);
     setGenerationStatus("loading"); setGenerationMessage("Building your study kit with AI…");
     try {
@@ -166,20 +157,25 @@ export default function Home() {
       });
       const data = await response.json() as { kit?: StudyKit; message?: string };
       if (!response.ok || !data.kit || !Array.isArray(data.kit.summary)) throw new Error(data.message || "AI generation failed.");
+      if (requestId !== generationRequestId.current) return;
       setAiKit(data.kit);
       setGenerationStatus("ai");
       setGenerationMessage("Your study kit was generated with AI from these notes.");
     } catch (error) {
+      if (requestId !== generationRequestId.current) return;
       setGenerationStatus("fallback");
       setGenerationMessage(error instanceof Error ? `${error.message} Showing a local study kit instead.` : "AI is unavailable. Showing a local study kit instead.");
     }
   }
 
   async function importFile(file: File) {
+    const requestId = ++generationRequestId.current;
+    resetStudyKit();
     setIsImporting(true);
     setImportMessage({ type: "success", text: `Reading ${file.name} in your browser…` });
     try {
       const extracted = await extractDocument(file);
+      if (requestId !== generationRequestId.current) return;
       setNotes(extracted.text);
       setSource(extracted.text);
       setImportedFile({ name: file.name, size: file.size, pageCount: extracted.pageCount });
@@ -190,10 +186,11 @@ export default function Home() {
         text: extracted.warning || "Text extracted. Review or edit it below, then generate your study kit.",
       });
     } catch (error) {
+      if (requestId !== generationRequestId.current) return;
       setImportedFile(null);
       setImportMessage({ type: "error", text: error instanceof Error ? error.message : "LearnCraft could not read that file." });
     } finally {
-      setIsImporting(false);
+      if (requestId === generationRequestId.current) setIsImporting(false);
     }
   }
 
@@ -210,15 +207,32 @@ export default function Home() {
     if (file && !isImporting) void importFile(file);
   }
 
-  function clearSource() {
-    setNotes("");
-    setImportedFile(null);
-    setImportMessage(null);
+  function resetStudyKit() {
+    setSource("");
     setAiKit(null);
+    setAnswers({});
+    setShowResults(false);
+    setFlipped(null);
     setGenerationStatus("idle");
     setGenerationMessage("");
     setChatMessages([]);
     setChatQuestion("");
+  }
+
+  function changeNotes(value: string) {
+    generationRequestId.current += 1;
+    setNotes(value);
+    setImportedFile(null);
+    setImportMessage(null);
+    resetStudyKit();
+  }
+
+  function clearSource() {
+    generationRequestId.current += 1;
+    setNotes("");
+    setImportedFile(null);
+    setImportMessage(null);
+    resetStudyKit();
   }
 
   async function askDocument(questionOverride?: string) {
@@ -288,11 +302,11 @@ export default function Home() {
           {importedFile && <div className="file-chip"><span>✓</span><div><strong>{importedFile.name}</strong><small>{formatFileSize(importedFile.size)}{importedFile.pageCount ? ` · ${importedFile.pageCount} pages` : ""}</small></div><button type="button" onClick={clearSource} aria-label={`Remove ${importedFile.name}`}>×</button></div>}
           {importMessage && <div className={`import-notice ${importMessage.type}`} role="status"><span>{importMessage.type === "error" ? "!" : importMessage.type === "warning" ? "i" : "✓"}</span><p>{importMessage.text}</p></div>}
           <div className="input-wrap">
-            <textarea value={notes} maxLength={MAX_STUDY_CHARS} onChange={(event) => setNotes(event.target.value)} placeholder="Paste lecture notes, a textbook section, or your own study guide…" aria-label="Extracted study text" />
+            <textarea value={notes} maxLength={MAX_STUDY_CHARS} onChange={(event) => changeNotes(event.target.value)} placeholder="Paste lecture notes, a textbook section, or your own study guide…" aria-label="Extracted study text" />
             <div className="input-meta"><span>{words.toLocaleString()} words · {notes.length.toLocaleString()}/{MAX_STUDY_CHARS.toLocaleString()} characters</span><button onClick={clearSource} disabled={!notes}>Clear</button></div>
           </div>
           <div className="controls-row">
-            <div><label htmlFor="depth">Study depth</label><select id="depth" value={difficulty} disabled={generationStatus === "loading"} onChange={(event) => { setDifficulty(event.target.value as Difficulty); setAnswers({}); setShowResults(false); setAiKit(null); setGenerationStatus("idle"); setGenerationMessage(""); }}><option>Quick</option><option>Standard</option><option>Deep</option></select></div>
+            <div><label htmlFor="depth">Study depth</label><select id="depth" value={difficulty} disabled={generationStatus === "loading"} onChange={(event) => { generationRequestId.current += 1; setDifficulty(event.target.value as Difficulty); resetStudyKit(); }}><option>Quick</option><option>Standard</option><option>Deep</option></select></div>
             <button className="generate-button" onClick={generate} disabled={!notes.trim() || generationStatus === "loading"}><span>{generationStatus === "loading" ? "Creating your kit…" : "Generate with AI"}</span><b>{generationStatus === "loading" ? "✦" : "→"}</b></button>
           </div>
           {generationMessage && <div className={`generation-notice ${generationStatus}`} role="status"><span>{generationStatus === "ai" ? "✦" : generationStatus === "loading" ? "◌" : "i"}</span><p>{generationMessage}</p></div>}
@@ -300,7 +314,8 @@ export default function Home() {
         </aside>
 
         <section className="results-panel" aria-live="polite">
-          <div className="results-heading"><div><span className="eyebrow">02 / STUDY KIT</span><h2>{generationStatus === "loading" ? "Turning notes into understanding…" : generationStatus === "ai" ? "Your AI study kit is ready." : "Ready when you are."}</h2></div><span className="depth-badge">{difficulty} depth</span></div>
+          <div className="results-heading"><div><span className="eyebrow">02 / STUDY KIT</span><h2>{generationStatus === "loading" ? "Turning notes into understanding…" : generationStatus === "ai" ? "Your AI study kit is ready." : generationStatus === "fallback" ? "Your local study kit is ready." : "Ready when you are."}</h2></div><span className="depth-badge">{difficulty} depth</span></div>
+          {!hasStudyKit ? <div className="result-content"><div className="chat-welcome"><span>✦</span><div><h4>{generationStatus === "loading" ? "Creating your study kit" : "Your workspace is ready"}</h4><p>{generationStatus === "loading" ? "We are turning your current notes into study material." : "Add course material or paste notes on the left, then select Generate with AI to create a study kit based on your source."}</p></div></div></div> : <>
           <div className="tabs" role="tablist" aria-label="Study tools">
             {tabs.map((tab) => <button key={tab.id} className={mode === tab.id ? "selected" : ""} onClick={() => setMode(tab.id)} role="tab" aria-selected={mode === tab.id}>{tab.label}{tab.count ? <span>{tab.count}</span> : null}</button>)}
           </div>
@@ -349,6 +364,7 @@ export default function Home() {
               </form>
             </div>}
           </div>
+          </>}
         </section>
       </section>
 
