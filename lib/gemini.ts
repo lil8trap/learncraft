@@ -25,6 +25,7 @@ export async function generateGeminiText(
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 35_000);
   try {
+    for (let attempt = 0; attempt < 3; attempt++) {
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
       {
@@ -58,6 +59,14 @@ console.error("Gemini API error:", {
   category: errorBody?.error?.status ?? "UNKNOWN",
 });
 
+      if (response.status === 503 && attempt < 2) {
+        // Retry temporary provider overload, at most twice. Keep the free-tier
+        // model unchanged; do not retry 429 (quota) or authentication errors.
+        const delayMs = 1000 * 2 ** attempt;
+        console.warn(`Gemini is temporarily unavailable; retry ${attempt + 1}/2 in ${delayMs}ms`);
+        await new Promise<void>((resolve) => setTimeout(resolve, delayMs));
+        continue;
+      }
       if (response.status === 429) {
         throw new GeminiRequestError(429, "Free AI capacity has been reached. Please try again later.");
       }
@@ -77,6 +86,9 @@ console.error("Gemini API error:", {
       .trim();
     if (!text) throw new GeminiRequestError(502, "The AI returned no text. Try shorter notes.");
     return text;
+    }
+    // Defensive fallback; normal success and error paths return or throw above.
+    throw new GeminiRequestError(502, "The AI provider is temporarily unavailable.");
   } catch (error) {
     if (error instanceof GeminiRequestError) throw error;
     if (error instanceof Error && error.name === "AbortError") {
