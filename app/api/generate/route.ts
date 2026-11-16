@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { GEMINI_MODEL, generateGeminiText, geminiErrorResponse } from "@/lib/gemini";
+import { generateGeminiTextWithModel, geminiErrorResponse } from "@/lib/gemini";
 import { withPublicApiProtection } from "@/lib/public-api-guard";
 
 type Depth = "Quick" | "Standard" | "Deep";
@@ -50,10 +50,10 @@ Return ONLY a JSON object with exactly these keys and structures:
 {"summary":["string"],"keyTerms":["string"],"flashcards":[{"front":"string","back":"string"}],"quiz":[{"prompt":"string","options":["A","B","C","D"],"answer":0,"explanation":"string"}],"plan":[{"time":"00–05","title":"string","description":"string"}],"studyTip":"string"}
 Generate exactly ${t.summary} summary points, 6–10 important terms, ${t.flashcards} flashcards, ${t.quiz} substantive four-option multiple-choice questions with zero-based correct answer indices (0–3), and exactly four 30-minute plan steps (00–05, 05–15, 15–25, 25–30). Quiz questions must test concepts and understanding, not whether words appear in the notes. Use plausible distractors and source-grounded explanations. Keep response concise and valid JSON. Depth: ${depth}.
 <SOURCE_NOTES>\n${notes}\n</SOURCE_NOTES>`;
-    const result = await generateGeminiText(prompt, { json: true, maxOutputTokens: 3500, timeoutMs: 45_000 });
+    const { text: result, model } = await generateGeminiTextWithModel(prompt, { json: true, maxOutputTokens: 3500, timeoutMs: 45_000 });
     const kit: unknown = JSON.parse(result);
     if (!validKit(kit)) return Response.json({ message: "AI returned an incomplete study kit. Please try again." }, { status: 502 });
-    return Response.json({ kit, mode: "ai", model: GEMINI_MODEL });
+    return Response.json({ kit, mode: "ai", model });
   } catch (error) { return geminiErrorResponse(error); }
 }
 export async function POST(request: NextRequest) {
