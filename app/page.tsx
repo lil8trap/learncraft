@@ -330,7 +330,27 @@ export default function Home() {
 
         <section className="results-panel" aria-live="polite">
           <div className="results-heading"><div><span className="eyebrow">02 / STUDY KIT</span><h2>{generationStatus === "loading" ? "Turning notes into understanding…" : generationStatus === "ai" ? "Your AI study kit is ready." : generationStatus === "fallback" ? "Your local study kit is ready." : "Ready when you are."}</h2></div><span className="depth-badge">{difficulty} depth</span></div>
-          {!hasStudyKit ? <div className="result-content"><div className="chat-welcome"><span>✦</span><div><h4>{generationStatus === "loading" ? "Creating your study kit" : "Your study kit starts here"}</h4><p>{generationStatus === "loading" ? "We are turning your current notes into study material." : "Add course material or paste notes on the left, then select Generate with AI to create a study kit based on your source."}</p></div></div></div> : <>
+          
+{!hasStudyKit ? (
+  <div className="result-content">
+    <div className="chat-welcome">
+      <div>
+        <h4>
+          {generationStatus === "loading"
+            ? "Creating your study kit"
+            : "Your study kit starts here"}
+        </h4>
+        <p>
+          {generationStatus === "loading"
+            ? "We are turning your current notes into study material."
+            : "Upload a document or paste notes to get started. Your personalized study kit will appear here once generated."}
+        </p>
+      </div>
+    </div>
+  </div>
+) : (
+  <>
+
           <div className="tabs" role="tablist" aria-label="Study tools">
             {tabs.map((tab) => <button key={tab.id} className={mode === tab.id ? "selected" : ""} onClick={() => setMode(tab.id)} role="tab" aria-selected={mode === tab.id}>{tab.label}{tab.count ? <span>{tab.count}</span> : null}</button>)}
           </div>
@@ -364,7 +384,7 @@ export default function Home() {
 
             {mode === "chat" && <div className="chat-view">
               <div className="result-title-row"><div><span className="section-kicker">GROUNDED DOCUMENT CHAT</span><h3>Ask your material anything</h3></div><span className="source-badge"><i /> Source only</span></div>
-              {chatMessages.length === 0 && <div className="chat-welcome"><span>✦</span><div><h4>Start with a question</h4><p>LearnCraft answers from the material on the left—not from the open web. If the answer is not in your notes, it will say so.</p></div></div>}
+              {chatMessages.length === 0 && <div className="chat-welcome"><div><h4>Start with a question</h4><p>LearnCraft answers from the material on the left—not from the open web. If the answer is not in your notes, it will say so.</p></div></div>}
               <div className="suggestion-list" aria-label="Suggested questions">
                 {suggestedQuestions.map((question) => <button key={question} type="button" onClick={() => void askDocument(question)} disabled={!notes.trim() || chatLoading}>{question}<span>→</span></button>)}
               </div>
@@ -379,7 +399,8 @@ export default function Home() {
               </form>
             </div>}
           </div>
-          </>}
+          </>
+          )}
         </section>
       </section>
 
