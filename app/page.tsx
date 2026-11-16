@@ -383,8 +383,8 @@ export default function Home() {
             </div>}
 
             {mode === "chat" && <div className="chat-view">
-              <div className="result-title-row"><div><span className="section-kicker">GROUNDED DOCUMENT CHAT</span><h3>Ask your material anything</h3></div><span className="source-badge"><i /> Source only</span></div>
-              {chatMessages.length === 0 && <div className="chat-welcome"><div><h4>Start with a question</h4><p>LearnCraft answers from the material on the left—not from the open web. If the answer is not in your notes, it will say so.</p></div></div>}
+              <div className="result-title-row"><div><span className="section-kicker">NOTES + GENERAL KNOWLEDGE</span><h3>Ask LearnCraft anything</h3></div><span className="source-badge"><i /> Notes + AI knowledge</span></div>
+              {chatMessages.length === 0 && <div className="chat-welcome"><div><h4>Start with a question</h4><p>Ask about your notes or any academic topic. LearnCraft uses your source when relevant and can explain concepts using general AI knowledge.</p></div></div>}
               <div className="suggestion-list" aria-label="Suggested questions">
                 {suggestedQuestions.map((question) => <button key={question} type="button" onClick={() => void askDocument(question)} disabled={!notes.trim() || chatLoading}>{question}<span>→</span></button>)}
               </div>
@@ -395,7 +395,7 @@ export default function Home() {
               <form className="chat-composer" onSubmit={submitChat}>
                 <label htmlFor="chat-question">Question about your material</label>
                 <div><input id="chat-question" value={chatQuestion} maxLength={600} onChange={(event) => setChatQuestion(event.target.value)} placeholder={notes.trim() ? "Ask for an explanation, comparison, example…" : "Add source material first…"} disabled={!notes.trim() || chatLoading} /><button type="submit" disabled={!chatQuestion.trim() || !notes.trim() || chatLoading} aria-label="Send question">{chatLoading ? "◌" : "↑"}</button></div>
-                <small>{chatQuestion.length}/600 · Answers stay grounded in your source</small>
+                <small>{chatQuestion.length}/600 · Notes are prioritized when relevant</small>
               </form>
             </div>}
           </div>
