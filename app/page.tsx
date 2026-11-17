@@ -1,6 +1,10 @@
 "use client";
 
 import { ChangeEvent, DragEvent, FormEvent, useMemo, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import { extractDocument, formatFileSize, MAX_STUDY_CHARS } from "@/lib/extract-document";
 
 type Mode = "summary" | "flashcards" | "quiz" | "plan" | "chat";
@@ -100,6 +104,15 @@ function localDocumentAnswer(question: string, text: string) {
     return "I couldn’t find that answer in your source material. Try asking about a concept, definition, or example that appears in the document.";
   }
   return `Based on your source material: ${matches.map((item) => item.sentence).join(" ")}`;
+}
+
+function normalizeMathDelimiters(markdown: string): string {
+  return markdown.split(/(```[\s\S]*?```)/g).map((part, index) => {
+    if (index % 2 === 1) return part;
+    return part
+      .replace(/\\\(([\s\S]*?)\\\)/g, (_match, equation: string) => `$${equation}$`)
+      .replace(/\\\[([\s\S]*?)\\\]/g, (_match, equation: string) => `\n$$\n${equation}\n$$\n`);
+  }).join("");
 }
 
 export default function Home() {
@@ -389,7 +402,19 @@ export default function Home() {
                 {suggestedQuestions.map((question) => <button key={question} type="button" onClick={() => void askDocument(question)} disabled={!notes.trim() || chatLoading}>{question}<span>→</span></button>)}
               </div>
               {chatMessages.length > 0 && <div className="chat-thread" aria-live="polite">
-                {chatMessages.map((message) => <article key={message.id} className={`chat-message ${message.role}`}><div className="chat-avatar">{message.role === "assistant" ? "L" : "You"}</div><div><span>{message.role === "assistant" ? "LearnCraft" : "You"}{message.mode ? <small>{message.mode === "ai" ? "AI answer" : "Local grounded answer"}</small> : null}</span><p>{message.content}</p></div></article>)}
+                {chatMessages.map((message) => <article key={message.id} className={`chat-message ${message.role}`}><div className="chat-avatar">{message.role === "assistant" ? "L" : "You"}</div><div><span>{message.role === "assistant" ? "LearnCraft" : "You"}{message.mode ? <small>{message.mode === "ai" ? "AI answer" : "Local grounded answer"}</small> : null}</span>{message.role === "assistant" ? (
+                  <div className="chat-markdown">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm, remarkMath]}
+                      rehypePlugins={[rehypeKatex]}
+                      skipHtml
+                    >
+                      {normalizeMathDelimiters(message.content)}
+                    </ReactMarkdown>
+                  </div>
+                ) : (
+                  <p>{message.content}</p>
+                )}</div></article>)}
                 {chatLoading && <article className="chat-message assistant loading"><div className="chat-avatar">L</div><div><span>LearnCraft</span><p>Searching your material<span className="typing-dots">…</span></p></div></article>}
               </div>}
               <form className="chat-composer" onSubmit={submitChat}>
