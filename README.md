@@ -4,7 +4,8 @@ LearnCraft is an AI-powered study assistant that turns class notes and course do
 
 **Live demo:** [learncraft-study.vercel.app](https://learncraft-study.vercel.app)
 
- width="2047" height="1117" alt="flashcards" src="https://github.com/user-attachments/assets/9f4d8678-f760-47e7-9f23-749c6a42fabd" />
+<img width="2047" height="1117" alt="summary" src="https://github.com/user-attachments/assets/ebb96024-dc9d-41a3-8e48-85a54195cb2b" />
+
 
 
 ## How it works
