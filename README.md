@@ -4,6 +4,7 @@ LearnCraft is an AI-powered study assistant that turns class notes and course do
 
 **Live demo:** [learncraft-study.vercel.app](https://learncraft-study.vercel.app)
 
+### Summary
 <img width="2047" height="1117" alt="summary" src="https://github.com/user-attachments/assets/ebb96024-dc9d-41a3-8e48-85a54195cb2b" />
 
 
@@ -17,13 +18,13 @@ LearnCraft is an AI-powered study assistant that turns class notes and course do
 
 ### Flashcards
 
-![LearnCraft Flashcards](<img width="2047" height="1117" alt="flashcards" src="https://github.com/user-attachments/assets/209e4ba4-17f1-4f69-9c7d-48a722a873a0" />
-)
+<img width="2047" height="1117" alt="flashcards" src="https://github.com/user-attachments/assets/a293088b-2879-45b7-ae1f-1eb965c24514" />
+
 
 ### Practice quiz
 
-![LearnCraft Practice Quiz](<img width="2047" height="1115" alt="practice-quiz" src="https://github.com/user-attachments/assets/d8dd711a-a83f-4465-bf86-29a2672bef56" />
-)
+<img width="2047" height="1115" alt="practice-quiz" src="https://github.com/user-attachments/assets/a4a17af7-b1db-4062-93ab-da31699487e3" />
+
 
 
 ## System Architecture (UML)
